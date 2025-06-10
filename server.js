@@ -9,6 +9,8 @@ const ejsMate = require('ejs-mate');
 
 const UserRoute = require('./routes/user')
 const SessionRoute = require('./routes/session')
+const AuthRoute = require('./routes/auth');
+const isAuthenticated = require('./middleware/auth');
 
 
 mongoose.Promise = global.Promise;
@@ -37,12 +39,12 @@ app.use((req, res, next) => {
 });
 
 app.get('/', (req, res) => {
-    res.json({"message": "Hello Crud Node Express"});
-
+    res.render('home');
 });
 
-app.use('/user',UserRoute)
-app.use('/session', SessionRoute)
+app.use('/user', isAuthenticated, UserRoute)
+app.use('/session', isAuthenticated, SessionRoute)
+app.use('/', AuthRoute);
 app.engine('ejs', ejsMate);
 app.set('view engine', 'ejs');
 app.set('views', './views');

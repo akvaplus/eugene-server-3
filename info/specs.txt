@@ -4,6 +4,26 @@ Last Updated: June 10, 2025
 
 This document lists key endpoints for the User Management System.
 
+AUTHENTICATION ENDPOINTS
+=======================
+1. GET / - Home page with login and registration forms
+   - Note: This is the entry point for unauthenticated users.
+2. POST /login - Authenticate user
+   - Data Accepted (Form data):
+     - identifier (string, required): Username or Email
+     - password (string, required): User password
+   - Note: On successful login, redirects to /user.
+3. POST /register - Register a new user
+   - Data Accepted (Form data):
+     - username (string, required)
+     - email (string, required)
+     - password (string, required)
+     - firstName (string, required)
+     - lastName (string, required)
+   - Note: Uses the same logic as POST /user/api for user creation. A verification email will be sent if email service is configured. On successful registration, logs in the user and redirects to /user.
+4. GET /logout - Logout the current user
+   - Note: Destroys the session and redirects to /.
+
 USER ENDPOINTS
 ==============
 API:
@@ -24,6 +44,8 @@ Views:
 6. PATCH /user/:id - Update user from form
 7. DELETE /user/:id - Delete user from form
 8. POST /user/:id/password - Update password
+9. GET /user/verify-email/:token - Verify user email
+   - Note: Verifies the user's email if the token is valid and not expired, then redirects to user profile.
 
 SESSION ENDPOINTS
 =================
@@ -44,6 +66,12 @@ Views:
 6. POST /session - Create session from form
 7. PATCH /session/:id - Update session from form
 8. DELETE /session/:id - Delete session from form
+
+ACCESS CONTROL
+==============
+- All /user and /session endpoints (both API and views) are protected and require user authentication.
+- Unauthenticated users are redirected to the home page (/) with a login prompt.
+- After successful login or registration, users are redirected to /user.
 
 Note: Full details and data accepted by each endpoint will be updated as needed. This document will be maintained with any changes to controllers or endpoints.
 
