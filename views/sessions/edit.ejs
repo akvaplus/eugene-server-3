@@ -1,0 +1,45 @@
+<% layout('layout') %>
+<% title = 'Edit Session' %>
+<% activePage = 'sessions' %>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Edit Session</h6>
+    </div>
+    <div class="card-body">
+        <form action="/session/<%= session._id %>?_method=PATCH" method="POST">
+            <div class="mb-3">
+                <label for="name" class="form-label">Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="name" name="name" value="<%= session.name %>" required>
+            </div>
+            <div class="mb-3">
+                <label for="userId" class="form-label">User <span class="text-danger">*</span></label>
+                <select class="form-select" id="userId" name="userId" required>
+                    <option value="">Select User</option>
+                    <% users.forEach(user => { %>
+                        <option value="<%= user._id %>" <%= session.userId && session.userId._id.toString() === user._id.toString() ? 'selected' : '' %>><%= user.firstName %> <%= user.lastName %> (<%= user.username %>)</option>
+                    <% }) %>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="startTime" class="form-label">Start Time</label>
+                <input type="datetime-local" class="form-control" id="startTime" name="startTime" value="<%= session.startTime ? new Date(session.startTime).toISOString().slice(0, 16) : '' %>">
+            </div>
+            <div class="mb-3">
+                <label for="endTime" class="form-label">End Time</label>
+                <input type="datetime-local" class="form-control" id="endTime" name="endTime" value="<%= session.endTime ? new Date(session.endTime).toISOString().slice(0, 16) : '' %>">
+            </div>
+            <div class="mb-3">
+                <label for="status" class="form-label">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="active" <%= session.status === 'active' ? 'selected' : '' %>>Active</option>
+                    <option value="completed" <%= session.status === 'completed' ? 'selected' : '' %>>Completed</option>
+                </select>
+            </div>
+            <div class="d-flex justify-content-between mt-4">
+                <a href="/session/<%= session._id %>" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">Update Session</button>
+            </div>
+        </form>
+    </div>
+</div> 

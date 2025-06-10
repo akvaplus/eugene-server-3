@@ -1,0 +1,50 @@
+User Management System - API Endpoints Documentation
+==============================================
+Last Updated: June 10, 2025
+
+This document lists key endpoints for the User Management System.
+
+USER ENDPOINTS
+==============
+API:
+1. GET /user/api - List all users
+2. GET /user/api/:id - Get user by ID
+3. POST /user/api - Create user (username, email, password, firstName, lastName required)
+   - Note: A verification email will be sent to the user's email address if email service is configured.
+4. PATCH /user/api/:id - Update user
+5. DELETE /user/api/:id - Delete user
+
+Views:
+1. GET /user - List users (HTML)
+2. GET /user/new - New user form
+3. GET /user/:id - User details
+4. GET /user/:id/edit - Edit user form
+5. POST /user - Create user from form
+   - Note: A verification email will be sent to the user's email address if email service is configured.
+6. PATCH /user/:id - Update user from form
+7. DELETE /user/:id - Delete user from form
+8. POST /user/:id/password - Update password
+
+SESSION ENDPOINTS
+=================
+API:
+1. GET /session/api - List all sessions
+2. GET /session/api/:id - Get session by ID
+3. GET /session/api/user/:userId - Get sessions by user
+4. POST /session/api - Create session (name, userId required)
+5. PATCH /session/api/:id - Update session
+6. DELETE /session/api/:id - Delete session
+
+Views:
+1. GET /session - List sessions (HTML)
+2. GET /session/new - New session form
+3. GET /session/:id - Session details
+4. GET /session/:id/edit - Edit session form
+5. GET /session/user/:userId - Sessions by user
+6. POST /session - Create session from form
+7. PATCH /session/:id - Update session from form
+8. DELETE /session/:id - Delete session from form
+
+Note: Full details and data accepted by each endpoint will be updated as needed. This document will be maintained with any changes to controllers or endpoints.
+
+If you have any questions or need further clarification on any endpoint, please contact the development team. 
