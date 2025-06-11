@@ -26,7 +26,7 @@
                         <tr>
                             <td><%= session._id %></td>
                             <td><%= session.name %></td>
-                            <td><%= session.userId ? `${session.userId.firstName} ${session.userId.lastName}` : 'N/A' %></td>
+                            <td><%= session.userFirstName && session.userLastName ? session.userFirstName + ' ' + session.userLastName : session.userUsername || 'Unknown User' %></td>
                             <td><%= new Date(session.startTime).toLocaleString() %></td>
                             <td><%= session.endTime ? new Date(session.endTime).toLocaleString() : 'N/A' %></td>
                             <td><%= session.status %></td>

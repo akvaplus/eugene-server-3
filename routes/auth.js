@@ -2,54 +2,77 @@ const express = require('express');
 const router = express.Router();
 const UserModel = require('../model/user');
 const UserController = require('../controllers/UserController');
+const bcrypt = require('bcrypt');
+const { sendVerificationEmail } = require('../services/email.service');
 
 // Login route
 router.post('/login', async (req, res) => {
-    const { identifier, password } = req.body;
-    
-    if (!identifier || !password) {
-        req.flash('error', 'Username/Email and password are required.');
-        return res.redirect('/');
-    }
-    
     try {
-        // Check if identifier is email or username
-        const query = identifier.includes('@') 
-            ? { email: identifier }
-            : { username: identifier };
-        
-        const user = await UserModel.findOne(query);
-        
-        if (!user) {
-            req.flash('error', 'Invalid credentials.');
-            return res.redirect('/');
+        const { identifier, password } = req.body;
+        if (!identifier || !password) {
+            return res.status(400).redirect(req.get('Referrer') || '/');
         }
-        
+
+        const user = await UserModel.findOne({
+            $or: [{ username: identifier }, { email: identifier }]
+        });
+
+        if (!user) {
+            return res.status(401).redirect(req.get('Referrer') || '/');
+        }
+
         const isMatch = await user.comparePassword(password);
         if (!isMatch) {
-            req.flash('error', 'Invalid credentials.');
-            return res.redirect('/');
+            return res.status(401).redirect(req.get('Referrer') || '/');
         }
-        
-        // If credentials are correct, store user ID in session
+
         req.session.userId = user._id;
-        req.flash('success', 'Logged in successfully!');
-        res.redirect('/user');
+        res.redirect(`/user/${user._id}`);
     } catch (error) {
         console.error('Login error:', error);
-        req.flash('error', 'An error occurred during login.');
-        res.redirect('/');
+        res.status(500).redirect(req.get('Referrer') || '/');
     }
 });
 
 // Registration route
-router.post('/register', (req, res) => {
-    UserController.create(req, res, (user) => {
-        // Store user ID in session after successful registration
-        req.session.userId = user._id;
-        req.flash('success', 'Registration successful! A verification email has been sent.');
-        res.redirect('/user');
-    });
+router.post('/register', async (req, res) => {
+    try {
+        const { username, email, password, firstName, lastName } = req.body;
+        const existingUser = await UserModel.findOne({ $or: [{ username }, { email }] });
+        if (existingUser) {
+            return res.status(400).redirect(req.get('Referrer') || '/');
+        }
+
+        const newUser = new UserModel({
+            username,
+            email,
+            password,
+            firstName: firstName || '',
+            lastName: lastName || '',
+            isAdmin: false
+        });
+        await newUser.save();
+
+        // Send verification email if email service is configured
+        const emailService = require('../services/email.service');
+        if (emailService.isConfigured) {
+            try {
+                await emailService.sendVerificationEmail(newUser);
+                console.log(`Verification email sent to ${newUser.email}`);
+            } catch (emailError) {
+                console.error(`Failed to send verification email to ${newUser.email}:`, emailError);
+                // Don't fail the registration if email sending fails
+            }
+        } else {
+            console.log('Email service not configured, skipping verification email');
+        }
+
+        req.session.userId = newUser._id;
+        res.redirect(`/user/${newUser._id}`);
+    } catch (error) {
+        console.error('Registration error:', error);
+        res.status(500).redirect(req.get('Referrer') || '/');
+    }
 });
 
 // Logout route
@@ -57,9 +80,6 @@ router.get('/logout', (req, res) => {
     req.session.destroy((err) => {
         if (err) {
             console.error('Error destroying session:', err);
-            req.flash('error', 'Error logging out.');
-        } else {
-            req.flash('success', 'Logged out successfully.');
         }
         res.redirect('/');
     });

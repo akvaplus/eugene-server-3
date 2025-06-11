@@ -1,4 +1,5 @@
 const UserModel = require('../model/user');
+const SessionModel = require('../model/session');
 
 // Create and Save a new user
 exports.create = async (req, res, callback) => {
@@ -63,11 +64,9 @@ exports.create = async (req, res, callback) => {
         }
     } catch (err) {
         if (err.code === 11000) {
-            req.flash('error', 'Username or email already exists');
-            return res.status(400).redirect('back');
+            return res.status(400).redirect(req.get('Referrer') || '/');
         }
-        req.flash('error', err.message || 'Error occurred while creating user');
-        res.status(500).redirect('back');
+        res.status(500).redirect(req.get('Referrer') || '/');
     }
 };
 
@@ -81,8 +80,7 @@ exports.findAll = async (req, res, callback) => {
             res.status(200).json(users);
         }
     } catch (error) {
-        req.flash('error', error.message || 'Error retrieving users');
-        res.status(500).redirect('back');
+        res.status(500).redirect(req.get('Referrer') || '/');
     }
 };
 
@@ -106,8 +104,7 @@ exports.findOne = async (req, res, callback) => {
             }
         }
     } catch (error) {
-        req.flash('error', error.message || 'Error retrieving user');
-        res.status(500).redirect('back');
+        res.status(500).redirect(req.get('Referrer') || '/');
     }
 };
 
@@ -161,72 +158,65 @@ exports.update = async (req, res, callback) => {
         }
     } catch (err) {
         if (err.code === 11000) {
-            req.flash('error', 'Username or email already exists');
-            return res.status(400).redirect('back');
+            return res.status(400).redirect(req.get('Referrer') || '/');
         }
-        req.flash('error', err.message || 'Error updating user');
-        res.status(500).redirect('back');
+        res.status(500).redirect(req.get('Referrer') || '/');
     }
 };
 
-// Delete a user by ID
-exports.destroy = async (req, res, callback) => {
+// Delete a user by ID along with their sessions
+exports.removeUser = async (req, res) => {
     try {
-        const user = await UserModel.findByIdAndDelete(req.params.id);
-        if (!user) {
-            if (callback) {
-                callback(null);
-            } else {
-                return res.status(404).json({
-                    message: 'User not found'
-                });
-            }
+        const userId = req.params.id;
+        const currentUser = await UserModel.findById(req.session.userId);
+        
+        // Check if user is admin or deleting their own account
+        if (!currentUser || (currentUser._id.toString() !== userId && !currentUser.isAdmin)) {
+            return res.redirect('/user');
+        }
+        
+        // Delete user and their sessions
+        await UserModel.findByIdAndDelete(userId);
+        await SessionModel.deleteMany({ userId: userId });
+        
+        // If user is deleting their own account, log them out
+        if (currentUser._id.toString() === userId) {
+            req.session.destroy((err) => {
+                if (err) {
+                    console.error('Error destroying session:', err);
+                }
+                res.redirect('/');
+            });
         } else {
-            if (callback) {
-                callback(user);
-            } else {
-                res.status(200).json({
-                    message: 'User deleted successfully!'
-                });
-            }
+            res.redirect('/user');
         }
-    } catch (err) {
-        req.flash('error', err.message || 'Error deleting user');
-        res.status(500).redirect('back');
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        res.redirect(req.get('Referrer') || '/');
     }
 };
 
-// Optional: Password update endpoint
+// Update user password
 exports.updatePassword = async (req, res, callback) => {
-    if (!req.body.password) {
-        req.flash('error', 'New password is required');
-        return res.status(400).redirect('back');
-    }
-
     try {
+        const { newPassword } = req.body;
+        if (!newPassword) {
+            return res.status(400).redirect(req.get('Referrer') || '/');
+        }
         const user = await UserModel.findById(req.params.id);
         if (!user) {
-            if (callback) {
-                callback(null);
-            } else {
-                return res.status(404).json({
-                    message: 'User not found'
-                });
-            }
+            return res.status(404).redirect(req.get('Referrer') || '/');
+        }
+        user.password = newPassword;
+        await user.save();
+        if (callback) {
+            callback(user);
         } else {
-            user.password = req.body.password;
-            await user.save();
-            
-            if (callback) {
-                callback(user);
-            } else {
-                res.status(200).json({
-                    message: 'Password updated successfully'
-                });
-            }
+            res.status(200).json({
+                message: 'Password updated successfully'
+            });
         }
     } catch (err) {
-        req.flash('error', err.message || 'Error updating password');
-        res.status(500).redirect('back');
+        res.status(500).redirect(req.get('Referrer') || '/');
     }
 };

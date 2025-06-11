@@ -12,30 +12,42 @@
                 <label for="name" class="form-label">Name <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" id="name" name="name" value="<%= session.name %>" required>
             </div>
-            <div class="mb-3">
-                <label for="userId" class="form-label">User <span class="text-danger">*</span></label>
-                <select class="form-select" id="userId" name="userId" required>
-                    <option value="">Select User</option>
-                    <% users.forEach(user => { %>
-                        <option value="<%= user._id %>" <%= session.userId && session.userId._id.toString() === user._id.toString() ? 'selected' : '' %>><%= user.firstName %> <%= user.lastName %> (<%= user.username %>)</option>
-                    <% }) %>
-                </select>
-            </div>
+            <% if (typeof session !== 'undefined' && session.isAdmin) { %>
+                <div class="mb-3">
+                    <label for="userId" class="form-label">User <span class="text-danger">*</span></label>
+                    <select class="form-select" id="userId" name="userId" required>
+                        <option value="">Select User</option>
+                        <% users.forEach(user => { %>
+                            <option value="<%= user._id.toString() %>" <%= session.userId && session.userId.toString() === user._id.toString() ? 'selected' : '' %>><%= user.username %> (<%= user._id.toString() %>)</option>
+                        <% }) %>
+                    </select>
+                </div>
+            <% } else { %>
+                <input type="hidden" name="userId" value="<%= typeof session !== 'undefined' && session.userId ? session.userId.toString() : '' %>">
+            <% } %>
             <div class="mb-3">
                 <label for="startTime" class="form-label">Start Time</label>
-                <input type="datetime-local" class="form-control" id="startTime" name="startTime" value="<%= session.startTime ? new Date(session.startTime).toISOString().slice(0, 16) : '' %>">
+                <input type="datetime-local" class="form-control" id="startTime" name="startTime" value="<%= session.startTime ? session.startTime.toISOString().slice(0, 16) : '' %>">
             </div>
             <div class="mb-3">
                 <label for="endTime" class="form-label">End Time</label>
-                <input type="datetime-local" class="form-control" id="endTime" name="endTime" value="<%= session.endTime ? new Date(session.endTime).toISOString().slice(0, 16) : '' %>">
+                <input type="datetime-local" class="form-control" id="endTime" name="endTime" value="<%= session.endTime ? session.endTime.toISOString().slice(0, 16) : '' %>">
             </div>
             <div class="mb-3">
                 <label for="status" class="form-label">Status</label>
-                <select class="form-select" id="status" name="status">
+                <select class="form-select" id="status" name="status" required>
                     <option value="active" <%= session.status === 'active' ? 'selected' : '' %>>Active</option>
+                    <option value="paused" <%= session.status === 'paused' ? 'selected' : '' %>>Paused</option>
                     <option value="completed" <%= session.status === 'completed' ? 'selected' : '' %>>Completed</option>
                 </select>
             </div>
+            <% if (typeof session !== 'undefined' && session.isAdmin) { %>
+                <div class="mb-3">
+                    <label for="metadata" class="form-label">Metadata (Key-Value Pairs)</label>
+                    <textarea class="form-control" id="metadata" name="metadata" rows="3" placeholder="Enter metadata as key=value pairs, one per line"><%= Object.entries(session.metadata || {}).map(([key, value]) => `${key}=${value}`).join('\n') %></textarea>
+                    <div class="form-text">Enter metadata as key=value pairs, one per line.</div>
+                </div>
+            <% } %>
             <div class="d-flex justify-content-between mt-4">
                 <a href="/session/<%= session._id %>" class="btn btn-secondary">Cancel</a>
                 <button type="submit" class="btn btn-primary">Update Session</button>

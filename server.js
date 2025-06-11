@@ -4,14 +4,15 @@ require('dotenv').config();
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const session = require('express-session');
-const flash = require('connect-flash');
 const ejsMate = require('ejs-mate');
+const MongoStore = require('connect-mongo');
 
 const UserRoute = require('./routes/user')
 const SessionRoute = require('./routes/session')
-const AuthRoute = require('./routes/auth');
-const isAuthenticated = require('./middleware/auth');
 
+const AuthRoute = require('./routes/auth');
+const { isAuthenticated } = require('./middleware/auth');
+const UserModel = require('./model/user');
 
 mongoose.Promise = global.Promise;
 mongoose.connect(process.env.MONGODB_URI).then(() => {
@@ -26,15 +27,24 @@ app.use(bodyParser.json())
 app.use(session({
     secret: 'your-secret-key',
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: false,
+    store: MongoStore.create({ mongoUrl: 'mongodb://localhost:27017/user-management' }),
+    cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 hours
 }));
-app.use(flash());
 
-app.use((req, res, next) => {
-    res.locals.messages = {
-        success: req.flash('success'),
-        error: req.flash('error')
-    };
+app.use(async (req, res, next) => {
+    res.locals.userId = req.session.userId || '';
+    if (req.session.userId) {
+        try {
+            const user = await UserModel.findById(req.session.userId);
+            res.locals.isAdmin = user ? user.isAdmin : false;
+        } catch (err) {
+            console.error('Error fetching user for isAdmin check:', err);
+            res.locals.isAdmin = false;
+        }
+    } else {
+        res.locals.isAdmin = false;
+    }
     next();
 });
 

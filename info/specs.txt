@@ -1,78 +1,70 @@
-User Management System - API Endpoints Documentation
-==============================================
-Last Updated: June 10, 2025
+User and Session Management System Specifications
 
-This document lists key endpoints for the User Management System.
+Overview:
+This document outlines the endpoints and views for a Node.js Express application designed for user and session management. The system includes user authentication, email verification, admin restrictions, and CRUD operations for both users and sessions.
 
-AUTHENTICATION ENDPOINTS
-=======================
-1. GET / - Home page with login and registration forms
-   - Note: This is the entry point for unauthenticated users.
-2. POST /login - Authenticate user
-   - Data Accepted (Form data):
-     - identifier (string, required): Username or Email
-     - password (string, required): User password
-   - Note: On successful login, redirects to /user.
-3. POST /register - Register a new user
-   - Data Accepted (Form data):
-     - username (string, required)
-     - email (string, required)
-     - password (string, required)
-     - firstName (string, required)
-     - lastName (string, required)
-   - Note: Uses the same logic as POST /user/api for user creation. A verification email will be sent if email service is configured. On successful registration, logs in the user and redirects to /user.
-4. GET /logout - Logout the current user
-   - Note: Destroys the session and redirects to /.
+API Endpoints:
 
-USER ENDPOINTS
-==============
-API:
-1. GET /user/api - List all users
-2. GET /user/api/:id - Get user by ID
-3. POST /user/api - Create user (username, email, password, firstName, lastName required)
-   - Note: A verification email will be sent to the user's email address if email service is configured.
-4. PATCH /user/api/:id - Update user
-5. DELETE /user/api/:id - Delete user
+Users:
+- GET /user/api - Retrieve all users (JSON response)
+- GET /user/api/:id - Retrieve a specific user by ID (JSON response)
+- POST /user/api - Create a new user (JSON response)
+- PATCH /user/api/:id - Update a specific user by ID (JSON response)
+- DELETE /user/api/:id - Delete a specific user by ID (JSON response)
 
-Views:
-1. GET /user - List users (HTML)
-2. GET /user/new - New user form
-3. GET /user/:id - User details
-4. GET /user/:id/edit - Edit user form
-5. POST /user - Create user from form
-   - Note: A verification email will be sent to the user's email address if email service is configured.
-6. PATCH /user/:id - Update user from form
-7. DELETE /user/:id - Delete user from form
-8. POST /user/:id/password - Update password
-9. GET /user/verify-email/:token - Verify user email
-   - Note: Verifies the user's email if the token is valid and not expired, then redirects to user profile.
+Sessions:
+- GET /session/api - Retrieve all sessions (JSON response)
+- GET /session/api/:id - Retrieve a specific session by ID (JSON response)
+- POST /session/api - Create a new session (JSON response)
+- PATCH /session/api/:id - Update a specific session by ID (JSON response)
+- DELETE /session/api/:id - Delete a specific session by ID (JSON response)
+- GET /session/api/user/:userId - Retrieve sessions for a specific user by user ID (JSON response)
 
-SESSION ENDPOINTS
-=================
-API:
-1. GET /session/api - List all sessions
-2. GET /session/api/:id - Get session by ID
-3. GET /session/api/user/:userId - Get sessions by user
-4. POST /session/api - Create session (name, userId required)
-5. PATCH /session/api/:id - Update session
-6. DELETE /session/api/:id - Delete session
+Authentication:
+- POST /auth/login - Authenticate a user with username or email and password
+- POST /auth/register - Register a new user with required fields
+- GET /auth/logout - Log out the current user
 
-Views:
-1. GET /session - List sessions (HTML)
-2. GET /session/new - New session form
-3. GET /session/:id - Session details
-4. GET /session/:id/edit - Edit session form
-5. GET /session/user/:userId - Sessions by user
-6. POST /session - Create session from form
-7. PATCH /session/:id - Update session from form
-8. DELETE /session/:id - Delete session from form
+View Endpoints:
 
-ACCESS CONTROL
-==============
-- All /user and /session endpoints (both API and views) are protected and require user authentication.
-- Unauthenticated users are redirected to the home page (/) with a login prompt.
-- After successful login or registration, users are redirected to /user.
+Users:
+- GET /user - List all users (Admin only)
+- GET /user/new - Form to create a new user
+- GET /user/:id - View a specific user's details
+- GET /user/:id/edit - Form to edit a specific user's details
+- POST /user - Create a new user
+- PATCH /user/:id - Update a specific user's details
+- POST /user/:id/delete - Delete a specific user and their associated sessions (Admin or self only)
+- POST /user/:id/password - Update a specific user's password
+- GET /user/verify-email/:token - Verify a user's email address via token
 
-Note: Full details and data accepted by each endpoint will be updated as needed. This document will be maintained with any changes to controllers or endpoints.
+Sessions:
+- GET /session - List sessions (All for Admin, user-specific for non-Admin)
+- GET /session/new - Form to create a new session
+- GET /session/:id - View a specific session's details
+- GET /session/:id/edit - Form to edit a specific session
+- POST /session - Create a new session
+- PATCH /session/:id - Update a specific session
+- DELETE /session/:id - Delete a specific session
+
+Home and Authentication:
+- GET / - Home page with login and registration forms (toggle between them)
+- POST /auth/login - Login form submission
+- POST /auth/register - Registration form submission
+- GET /auth/logout - Logout action
+
+Features and Restrictions:
+- User Authentication: All views except the home page require login. Login can be done with either username or email.
+- Admin Restrictions: Only admin users can view all users (/user) and create sessions for other users. Non-admin users are restricted to their own profile and sessions.
+- Session Management: Non-admin users can only create/edit sessions for themselves, with user ID hidden in forms. Admin users can manage sessions for any user.
+- Email Verification: Upon registration, a verification email is sent if the email service is configured.
+- Navigation: Header shows 'Home' for non-logged-in users. For logged-in users, it shows 'My Profile', 'Sessions', and 'Logout'. For admin users, 'My Profile' is replaced with 'Users' to access the full user list.
+- User Deletion: Users can delete their own account, and admins can delete any user. Deletion removes the user and all associated sessions.
+- UI: Uses Bootstrap for a modern look, with a dark-themed header and footer. Flash messages have been removed from the project.
+
+Notes:
+- All redirects using 'back' have been updated to use req.get('Referrer') || '/' to address deprecation warnings.
+- The system no longer uses flash messages for success or error notifications.
+- This document will be updated as the application evolves with additional features or changes.
 
 If you have any questions or need further clarification on any endpoint, please contact the development team. 

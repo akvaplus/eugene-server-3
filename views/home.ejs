@@ -1,21 +1,9 @@
 <% layout('layout') -%>
 
 <div class="container mt-5">
+  <h1 class="text-center mb-4">Welcome to User Management System</h1>
   <div class="row justify-content-center">
     <div class="col-md-6">
-      <h1 class="text-center mb-4">Welcome to User Management System</h1>
-      
-      <% if (messages.error && messages.error.length > 0) { %>
-        <div class="alert alert-danger">
-          <%= messages.error[0] %>
-        </div>
-      <% } %>
-      <% if (messages.success && messages.success.length > 0) { %>
-        <div class="alert alert-success">
-          <%= messages.success[0] %>
-        </div>
-      <% } %>
-      
       <div class="card shadow-sm mb-4" id="loginCard">
         <div class="card-header bg-primary text-white">
           <h5 class="my-0">Login</h5>
@@ -52,16 +40,16 @@
               <small class="form-text text-muted">A verification email will be sent after registration.</small>
             </div>
             <div class="form-group mb-3">
-              <label for="regPassword">Password</label>
-              <input type="password" class="form-control" id="regPassword" name="password" required>
-            </div>
-            <div class="form-group mb-3">
               <label for="regFirstName">First Name</label>
               <input type="text" class="form-control" id="regFirstName" name="firstName" required>
             </div>
             <div class="form-group mb-3">
               <label for="regLastName">Last Name</label>
               <input type="text" class="form-control" id="regLastName" name="lastName" required>
+            </div>
+            <div class="form-group mb-3">
+              <label for="regPassword">Password</label>
+              <input type="password" class="form-control" id="regPassword" name="password" required>
             </div>
             <button type="submit" class="btn btn-success w-100 mb-2">Register</button>
           </form>

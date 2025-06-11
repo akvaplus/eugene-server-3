@@ -4,54 +4,53 @@ const UserModel = require('../model/user');
 console.log('SessionModel:', SessionModel);
 
 // Create and Save a new session
-exports.create = async (req, res, callback) => {
-    // Validate required fields
-    const requiredFields = ['name', 'userId'];
-    const missingFields = requiredFields.filter(field => !req.body[field]);
-    
-    if (missingFields.length > 0) {
-        req.flash('error', `Missing required fields: ${missingFields.join(', ')}`);
-        return res.status(400).redirect('back');
-    }
-
+exports.create = async (req, res) => {
     try {
-        // Check if user exists
-        const user = await UserModel.findById(req.body.userId);
-        if (!user) {
-            req.flash('error', 'User not found');
-            return res.status(400).redirect('back');
+        const { name, startTime, endTime, status, metadata } = req.body;
+        const userId = req.session.userId;
+        let sessionUserId = userId; // Default to current user's ID
+        
+        // Check if the user is trying to create a session for another user
+        if (req.body.userId && req.body.userId !== userId) {
+            const currentUser = await UserModel.findById(userId);
+            if (!currentUser || !currentUser.isAdmin) {
+                return res.redirect('/session');
+            }
+            sessionUserId = req.body.userId; // Allow admin to set different user ID
         }
-
-        const session = new SessionModel({
-            name: req.body.name,
-            userId: req.body.userId,
-            startTime: req.body.startTime || Date.now(),
-            endTime: req.body.endTime,
-            status: req.body.status || 'active',
-            metadata: req.body.metadata || {}
-        });
-
-        const data = await session.save();
-        if (callback) {
-            callback(data);
-        } else {
-            res.status(201).json({
-                message: "Session created successfully!",
-                session: {
-                    id: data._id,
-                    name: data.name,
-                    userId: data.userId,
-                    startTime: data.startTime,
-                    endTime: data.endTime,
-                    status: data.status,
-                    metadata: data.metadata,
-                    createdAt: data.createdAt
+        
+        // Parse metadata if provided as a string (from textarea)
+        let metadataObj = {};
+        if (metadata && typeof metadata === 'string') {
+            metadata.split('\n').forEach(pair => {
+                const [key, value] = pair.split('=');
+                if (key && value) {
+                    metadataObj[key.trim()] = value.trim();
                 }
             });
+        } else if (metadata && typeof metadata === 'object') {
+            metadataObj = metadata;
         }
-    } catch (err) {
-        req.flash('error', err.message || 'Error occurred while creating session');
-        res.status(500).redirect('back');
+        
+        // Fetch user details to store name information
+        const sessionUser = await UserModel.findById(sessionUserId);
+        
+        const newSession = new SessionModel({
+            name,
+            userId: sessionUserId,
+            userFirstName: sessionUser ? sessionUser.firstName : '',
+            userLastName: sessionUser ? sessionUser.lastName : '',
+            userUsername: sessionUser ? sessionUser.username : '',
+            startTime: startTime || new Date(),
+            endTime: endTime || undefined,
+            status: status || 'active',
+            metadata: metadataObj
+        });
+        await newSession.save();
+        res.redirect('/session');
+    } catch (error) {
+        console.error('Error creating session:', error);
+        res.redirect('/session/new');
     }
 };
 
@@ -65,7 +64,6 @@ exports.findAll = async (req, res, callback) => {
             res.status(200).json(sessions);
         }
     } catch (error) {
-        req.flash('error', error.message || 'Error retrieving sessions');
         res.status(500).redirect('back');
     }
 };
@@ -90,62 +88,64 @@ exports.findOne = async (req, res, callback) => {
             }
         }
     } catch (error) {
-        req.flash('error', error.message || 'Error retrieving session');
         res.status(500).redirect('back');
     }
 };
 
 // Update a session by ID
-exports.update = async (req, res, callback) => {
-    if (!req.body || Object.keys(req.body).length === 0) {
-        req.flash('error', 'Data to update cannot be empty!');
-        return res.status(400).redirect('back');
-    }
-
-    const id = req.params.id;
-    const updateData = { ...req.body };
-
+exports.update = async (req, res) => {
     try {
-        // If userId is being updated, check if user exists
-        if (updateData.userId) {
-            const user = await UserModel.findById(updateData.userId);
-            if (!user) {
-                req.flash('error', 'User not found');
-                return res.status(400).redirect('back');
-            }
-        }
-
-        const session = await SessionModel.findByIdAndUpdate(
-            id, 
-            updateData, 
-            { 
-                new: true, 
-                runValidators: true,
-                useFindAndModify: false 
-            }
-        ).populate('userId');
-
+        const { name, startTime, endTime, status, metadata } = req.body;
+        const userId = req.session.userId;
+        const sessionId = req.params.id;
+        
+        // Fetch the session to be updated
+        const session = await SessionModel.findById(sessionId);
         if (!session) {
-            if (callback) {
-                callback(null);
-            } else {
-                return res.status(404).json({
-                    message: 'Session not found'
-                });
-            }
-        } else {
-            if (callback) {
-                callback(session);
-            } else {
-                res.status(200).json({
-                    message: 'Session updated successfully',
-                    session
-                });
-            }
+            return res.redirect('/session');
         }
-    } catch (err) {
-        req.flash('error', err.message || 'Error updating session');
-        res.status(500).redirect('back');
+        
+        // Check if the user is trying to change the userId of the session
+        let sessionUserId = session.userId;
+        if (req.body.userId && req.body.userId !== session.userId.toString()) {
+            const currentUser = await UserModel.findById(userId);
+            if (!currentUser || !currentUser.isAdmin) {
+                return res.redirect(`/session/${sessionId}`);
+            }
+            sessionUserId = req.body.userId; // Allow admin to set different user ID
+            // Update user information when userId changes
+            const sessionUser = await UserModel.findById(sessionUserId);
+            session.userFirstName = sessionUser ? sessionUser.firstName : '';
+            session.userLastName = sessionUser ? sessionUser.lastName : '';
+            session.userUsername = sessionUser ? sessionUser.username : '';
+        }
+        
+        // Parse metadata if provided as a string (from textarea)
+        let metadataObj = {};
+        if (metadata && typeof metadata === 'string') {
+            metadata.split('\n').forEach(pair => {
+                const [key, value] = pair.split('=');
+                if (key && value) {
+                    metadataObj[key.trim()] = value.trim();
+                }
+            });
+        } else if (metadata && typeof metadata === 'object') {
+            metadataObj = metadata;
+        }
+        
+        // Update session fields
+        session.name = name || session.name;
+        session.userId = sessionUserId;
+        session.startTime = startTime ? new Date(startTime) : session.startTime;
+        session.endTime = endTime ? new Date(endTime) : session.endTime;
+        session.status = status || session.status;
+        session.metadata = metadataObj;
+        
+        await session.save();
+        res.redirect(`/session/${sessionId}`);
+    } catch (error) {
+        console.error('Error updating session:', error);
+        res.redirect(`/session/${req.params.id}/edit`);
     }
 };
 
@@ -171,7 +171,6 @@ exports.destroy = async (req, res, callback) => {
             }
         }
     } catch (err) {
-        req.flash('error', err.message || 'Error deleting session');
         res.status(500).redirect('back');
     }
 };
@@ -186,7 +185,6 @@ exports.findByUserId = async (req, res, callback) => {
             res.status(200).json(sessions);
         }
     } catch (error) {
-        req.flash('error', error.message || 'Error retrieving sessions for user');
         res.status(500).redirect('back');
     }
 }; 

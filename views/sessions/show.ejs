@@ -13,6 +13,7 @@
         </div>
     </div>
     <div class="card-body">
+        <h1>Session for User: <%= session.userFirstName && session.userLastName ? session.userFirstName + ' ' + session.userLastName : session.userUsername || 'Unknown User' %></h1>
         <div class="row">
             <div class="col-md-6">
                 <div class="mb-3">
@@ -22,7 +23,7 @@
                     <strong>Name:</strong> <%= session.name %>
                 </div>
                 <div class="mb-3">
-                    <strong>User:</strong> <%= session.userId ? `${session.userId.firstName} ${session.userId.lastName}` : 'N/A' %>
+                    <strong>User:</strong> <%= session.userFirstName && session.userLastName ? session.userFirstName + ' ' + session.userLastName : session.userUsername || 'Unknown User' %>
                 </div>
             </div>
             <div class="col-md-6">
@@ -42,12 +43,8 @@
             <br>
             <strong>Last Updated:</strong> <%= new Date(session.updatedAt).toLocaleString() %>
         </div>
-        <div class="mt-4">
-            <a href="/session" class="btn btn-secondary">Back to List</a>
-            <% if (session.userId) { %>
-                <a href="/user/<%= session.userId._id %>" class="btn btn-info">View User</a>
-            <% } %>
-            <a href="/session/user/<%= session.userId._id %>" class="btn btn-primary">View User Sessions</a>
+        <div class="d-flex justify-content-between mt-4">
+            <a href="/session" class="btn btn-primary">Back to List</a>
         </div>
     </div>
 </div> 

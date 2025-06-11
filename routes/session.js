@@ -2,6 +2,9 @@ const express = require('express')
 const SessionController = require('../controllers/SessionController')
 const router = express.Router();
 const methodOverride = require('method-override');
+const SessionModel = require('../model/session');
+const { isAuthenticated } = require('../middleware/auth');
+const UserModel = require('../model/user');
 
 // Use method override to support PUT and DELETE in forms
 router.use(methodOverride('_method'));
@@ -15,66 +18,75 @@ router.delete('/api/:id', SessionController.destroy);
 router.get('/api/user/:userId', SessionController.findByUserId);
 
 // Routes for views
-router.get('/', (req, res) => {
-    SessionController.findAll(req, res, sessions => {
-        res.render('sessions/index', { sessions, userId: req.params.userId || undefined });
-    });
+router.get('/', isAuthenticated, async (req, res) => {
+    try {
+        let sessions;
+        const currentUser = await UserModel.findById(req.session.userId);
+        if (currentUser && currentUser.isAdmin) {
+            sessions = await SessionModel.find().populate('userId');
+        } else {
+            sessions = await SessionModel.find({ userId: req.session.userId }).populate('userId');
+        }
+        res.render('sessions/index', { sessions, activePage: 'sessions' });
+    } catch (error) {
+        console.error('Error fetching sessions:', error);
+        res.redirect(req.get('Referrer') || '/session');
+    }
 });
 
-router.get('/new', (req, res) => {
-    // We need to get all users for the dropdown
-    require('../model/user').find().then(users => {
+router.get('/new', isAuthenticated, async (req, res) => {
+    try {
+        const users = await UserModel.find();
         res.render('sessions/new', { users });
-    }).catch(err => {
-        req.flash('error', 'Error loading users for session creation');
-        res.redirect('/session');
-    });
+    } catch (error) {
+        console.error('Error loading new session form:', error);
+        res.redirect(req.get('Referrer') || '/session');
+    }
 });
 
-router.get('/:id', (req, res) => {
-    SessionController.findOne(req, res, session => {
+router.get('/:id', isAuthenticated, async (req, res) => {
+    try {
+        const session = await SessionModel.findById(req.params.id).populate('userId');
         if (!session) {
-            req.flash('error', 'Session not found');
             return res.redirect('/session');
         }
-        res.render('sessions/show', { session });
-    });
+        res.render('sessions/show', { session, activePage: 'sessions' });
+    } catch (error) {
+        console.error('Error fetching session:', error);
+        res.redirect('/session');
+    }
 });
 
-router.get('/:id/edit', (req, res) => {
-    SessionController.findOne(req, res, session => {
+router.get('/:id/edit', isAuthenticated, async (req, res) => {
+    try {
+        const session = await SessionModel.findById(req.params.id).populate('userId');
+        const users = await UserModel.find();
         if (!session) {
-            req.flash('error', 'Session not found');
             return res.redirect('/session');
         }
-        require('../model/user').find().then(users => {
-            res.render('sessions/edit', { session, users });
-        }).catch(err => {
-            req.flash('error', 'Error loading users for session edit');
-            res.redirect('/session');
-        });
-    });
-});
-
-router.post('/', (req, res) => {
-    SessionController.create(req, res, () => {
-        req.flash('success', 'Session created successfully');
+        res.render('sessions/edit', { session, users });
+    } catch (error) {
+        console.error('Error loading edit session form:', error);
         res.redirect('/session');
-    });
+    }
 });
 
-router.patch('/:id', (req, res) => {
-    SessionController.update(req, res, () => {
-        req.flash('success', 'Session updated successfully');
-        res.redirect(`/session/${req.params.id}`);
-    });
+router.post('/', isAuthenticated, async (req, res) => {
+    await SessionController.create(req, res);
 });
 
-router.delete('/:id', (req, res) => {
-    SessionController.destroy(req, res, () => {
-        req.flash('success', 'Session deleted successfully');
+router.patch('/:id', isAuthenticated, async (req, res) => {
+    await SessionController.update(req, res);
+});
+
+router.delete('/:id', isAuthenticated, async (req, res) => {
+    try {
+        await SessionModel.findByIdAndDelete(req.params.id);
         res.redirect('/session');
-    });
+    } catch (error) {
+        console.error('Error deleting session:', error);
+        res.redirect('/session');
+    }
 });
 
 router.get('/user/:userId', (req, res) => {

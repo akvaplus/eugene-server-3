@@ -27,6 +27,18 @@ const sessionSchema = new mongoose.Schema({
         type: Map,
         of: String,
         default: {}
+    },
+    userFirstName: {
+        type: String,
+        default: ''
+    },
+    userLastName: {
+        type: String,
+        default: ''
+    },
+    userUsername: {
+        type: String,
+        default: ''
     }
 }, {
     timestamps: true

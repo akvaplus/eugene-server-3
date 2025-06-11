@@ -3,57 +3,54 @@
 <% activePage = 'new-user' %>
 
 <div class="container mt-5">
-  <h1 class="mb-4">Create New User</h1>
-  
-  <% if (messages.error && messages.error.length > 0) { %>
-    <div class="alert alert-danger">
-      <%= messages.error[0] %>
-    </div>
-  <% } %>
-  
-  <div class="card shadow-sm">
-    <div class="card-body">
-      <form action="/user" method="POST">
-        <div class="form-group mb-3">
-          <label for="username">Username</label>
-          <input type="text" class="form-control" id="username" name="username" required>
+  <h1 class="text-center mb-4">Create New User</h1>
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <form action="/user" method="POST">
+            <div class="form-group mb-3">
+              <label for="username">Username</label>
+              <input type="text" class="form-control" id="username" name="username" required>
+            </div>
+            <div class="form-group mb-3">
+              <label for="email">Email</label>
+              <input type="email" class="form-control" id="email" name="email" required>
+              <small class="form-text text-muted">A verification email will be sent after registration.</small>
+            </div>
+            <div class="form-group mb-3">
+              <label for="password">Password</label>
+              <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+            <div class="form-group mb-3">
+              <label for="firstName">First Name</label>
+              <input type="text" class="form-control" id="firstName" name="firstName" required>
+            </div>
+            <div class="form-group mb-3">
+              <label for="lastName">Last Name</label>
+              <input type="text" class="form-control" id="lastName" name="lastName" required>
+            </div>
+            <div class="form-group mb-3">
+              <label for="age">Age</label>
+              <input type="number" class="form-control" id="age" name="age">
+            </div>
+            <div class="form-group mb-3">
+              <label for="weight">Weight (kg)</label>
+              <input type="number" class="form-control" id="weight" name="weight" step="0.1">
+            </div>
+            <div class="form-group mb-3">
+              <label for="sex">Sex</label>
+              <select class="form-control" id="sex" name="sex">
+                <option value="">Select</option>
+                <option value="M">Male</option>
+                <option value="F">Female</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Create User</button>
+            <a href="/user" class="btn btn-secondary">Cancel</a>
+          </form>
         </div>
-        <div class="form-group mb-3">
-          <label for="email">Email</label>
-          <input type="email" class="form-control" id="email" name="email" required>
-          <small class="form-text text-muted">A verification email will be sent after registration.</small>
-        </div>
-        <div class="form-group mb-3">
-          <label for="password">Password</label>
-          <input type="password" class="form-control" id="password" name="password" required>
-        </div>
-        <div class="form-group mb-3">
-          <label for="firstName">First Name</label>
-          <input type="text" class="form-control" id="firstName" name="firstName" required>
-        </div>
-        <div class="form-group mb-3">
-          <label for="lastName">Last Name</label>
-          <input type="text" class="form-control" id="lastName" name="lastName" required>
-        </div>
-        <div class="form-group mb-3">
-          <label for="age">Age</label>
-          <input type="number" class="form-control" id="age" name="age">
-        </div>
-        <div class="form-group mb-3">
-          <label for="weight">Weight (kg)</label>
-          <input type="number" class="form-control" id="weight" name="weight" step="0.1">
-        </div>
-        <div class="form-group mb-3">
-          <label for="sex">Sex</label>
-          <select class="form-control" id="sex" name="sex">
-            <option value="">Select</option>
-            <option value="M">Male</option>
-            <option value="F">Female</option>
-          </select>
-        </div>
-        <button type="submit" class="btn btn-primary">Create User</button>
-        <a href="/user" class="btn btn-secondary">Cancel</a>
-      </form>
+      </div>
     </div>
   </div>
 </div> 
