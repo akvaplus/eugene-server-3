@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const session = require('express-session');
 const ejsMate = require('ejs-mate');
 const MongoStore = require('connect-mongo');
+const passport = require('passport');
 
 const UserRoute = require('./routes/user')
 const SessionRoute = require('./routes/session')
@@ -32,6 +33,24 @@ app.use(session({
     cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 hours
 }));
 
+// Initialize Passport and restore authentication state from session
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Passport serialization
+passport.serializeUser((user, done) => {
+    done(null, user.id);
+});
+
+passport.deserializeUser(async (id, done) => {
+    try {
+        const user = await UserModel.findById(id);
+        done(null, user);
+    } catch (err) {
+        done(err, null);
+    }
+});
+
 app.use(async (req, res, next) => {
     res.locals.userId = req.session.userId || '';
     if (req.session.userId) {
@@ -49,12 +68,12 @@ app.use(async (req, res, next) => {
 });
 
 app.get('/', (req, res) => {
-    res.render('home');
+    res.render('home', { error: req.query.error });
 });
 
 app.use('/user', isAuthenticated, UserRoute)
 app.use('/session', isAuthenticated, SessionRoute)
-app.use('/', AuthRoute);
+app.use('/auth', AuthRoute);
 app.engine('ejs', ejsMate);
 app.set('view engine', 'ejs');
 app.set('views', './views');

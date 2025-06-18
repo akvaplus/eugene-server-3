@@ -73,6 +73,17 @@ exports.create = async (req, res, callback) => {
 // Retrieve all users
 exports.findAll = async (req, res, callback) => {
     try {
+        // Log who is requesting the data
+        let requestingUser = 'Unknown User';
+        if (req.session.userId) {
+            const user = await UserModel.findById(req.session.userId).select('username email firstName lastName');
+            if (user) {
+                requestingUser = `User ID: ${req.session.userId}, Username: ${user.username}, Email: ${user.email}, Name: ${user.firstName} ${user.lastName}`;
+            } else {
+                requestingUser = `User ID: ${req.session.userId} (User not found)`;
+            }
+        }
+        console.log(`User data requested from /user/api by ${requestingUser} at ${new Date().toISOString()}`);
         const users = await UserModel.find().select('-password -emailVerificationToken -resetPasswordToken');
         if (callback) {
             callback(users);

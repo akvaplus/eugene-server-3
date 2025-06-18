@@ -54,13 +54,13 @@
                                 <a class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'sessions' ? 'active' : '' %>" href="/session">Sessions</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="/logout">Logout</a>
+                                <a class="nav-link" href="/auth/logout">Logout</a>
                             </li>
                         <% } else { %>
                             <!-- Removed Home link for non-logged-in users -->
-                            <li class="nav-item">
+                            <!-- <li class="nav-item">
                                 <a class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'home' ? 'active' : '' %>" href="/">Home</a>
-                            </li>
+                            </li> -->
                         <% } %>
                     </ul>
                 </div>

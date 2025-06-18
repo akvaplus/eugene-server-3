@@ -4,13 +4,15 @@ const UserModel = require('../model/user');
 const UserController = require('../controllers/UserController');
 const bcrypt = require('bcrypt');
 const { sendVerificationEmail } = require('../services/email.service');
+const passport = require('passport');
+require('../config/google.auth');
 
 // Login route
 router.post('/login', async (req, res) => {
     try {
         const { identifier, password } = req.body;
         if (!identifier || !password) {
-            return res.status(400).redirect(req.get('Referrer') || '/');
+            return res.redirect('/?error=Please provide both username/email and password');
         }
 
         const user = await UserModel.findOne({
@@ -18,19 +20,19 @@ router.post('/login', async (req, res) => {
         });
 
         if (!user) {
-            return res.status(401).redirect(req.get('Referrer') || '/');
+            return res.redirect('/?error=Invalid username or email');
         }
 
         const isMatch = await user.comparePassword(password);
         if (!isMatch) {
-            return res.status(401).redirect(req.get('Referrer') || '/');
+            return res.redirect('/?error=Invalid password');
         }
 
         req.session.userId = user._id;
         res.redirect(`/user/${user._id}`);
     } catch (error) {
         console.error('Login error:', error);
-        res.status(500).redirect(req.get('Referrer') || '/');
+        res.redirect('/?error=An error occurred during login');
     }
 });
 
@@ -84,5 +86,19 @@ router.get('/logout', (req, res) => {
         res.redirect('/');
     });
 });
+
+// Google OAuth routes
+router.get('/google',
+    passport.authenticate('google', {
+        scope: ['profile', 'email']
+    })
+);
+
+router.get('/google/callback',
+    passport.authenticate('google', {
+        failureRedirect: '/',
+        successRedirect: '/user'
+    })
+);
 
 module.exports = router; 

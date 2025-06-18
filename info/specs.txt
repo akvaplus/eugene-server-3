@@ -1,7 +1,7 @@
 User and Session Management System Specifications
 
 Overview:
-This document outlines the endpoints and views for a Node.js Express application designed for user and session management. The system includes user authentication, email verification, admin restrictions, and CRUD operations for both users and sessions.
+This document outlines the endpoints and views for a Node.js Express application designed for user and session management. The system includes user authentication (both traditional and Google OAuth), email verification, admin restrictions, and CRUD operations for both users and sessions.
 
 API Endpoints:
 
@@ -24,6 +24,8 @@ Authentication:
 - POST /auth/login - Authenticate a user with username or email and password
 - POST /auth/register - Register a new user with required fields
 - GET /auth/logout - Log out the current user
+- GET /auth/google - Initiate Google OAuth authentication
+- GET /auth/google/callback - Handle Google OAuth callback
 
 View Endpoints:
 
@@ -54,17 +56,21 @@ Home and Authentication:
 - GET /auth/logout - Logout action
 
 Features and Restrictions:
-- User Authentication: All views except the home page require login. Login can be done with either username or email.
+- User Authentication: 
+  * Traditional login with username/email and password
+  * Google OAuth authentication for seamless sign-in
+  * All views except the home page require login
 - Admin Restrictions: Only admin users can view all users (/user) and create sessions for other users. Non-admin users are restricted to their own profile and sessions.
 - Session Management: Non-admin users can only create/edit sessions for themselves, with user ID hidden in forms. Admin users can manage sessions for any user.
 - Email Verification: Upon registration, a verification email is sent if the email service is configured.
-- Navigation: Header shows 'Home' for non-logged-in users. For logged-in users, it shows 'My Profile', 'Sessions', and 'Logout'. For admin users, 'My Profile' is replaced with 'Users' to access the full user list.
+- Navigation: Header shows navigation options based on user authentication status and admin privileges. For logged-in users, it shows 'My Profile', 'Sessions', and 'Logout'. For admin users, 'My Profile' is replaced with 'Users' to access the full user list.
 - User Deletion: Users can delete their own account, and admins can delete any user. Deletion removes the user and all associated sessions.
-- UI: Uses Bootstrap for a modern look, with a dark-themed header and footer. Flash messages have been removed from the project.
+- API Access Logging: All access to /user/api endpoint is logged with detailed user information including username, email, and full name.
 
 Notes:
 - All redirects using 'back' have been updated to use req.get('Referrer') || '/' to address deprecation warnings.
 - The system no longer uses flash messages for success or error notifications.
+- Google OAuth users are automatically verified since they use a verified Google account.
 - This document will be updated as the application evolves with additional features or changes.
 
 If you have any questions or need further clarification on any endpoint, please contact the development team. 
