@@ -13,11 +13,13 @@ router.use(methodOverride('_method'));
 router.get('/api', UserController.findAll);
 router.get('/api/:id', UserController.findOne);
 router.post('/api', UserController.create);
-router.patch('/api/:id', UserController.update);
+// Change API update from PATCH to POST
+router.post('/api/:id/update', UserController.update);
 // Temporarily comment out the delete API route to prevent errors
 // router.delete('/api/:id', UserController.destroy);
 // Replace with a direct implementation if needed
-router.delete('/api/:id', async (req, res) => {
+// Change API delete from DELETE to POST
+router.post('/api/:id/delete', async (req, res) => {
     try {
         const user = await UserModel.findByIdAndDelete(req.params.id);
         if (!user) {
@@ -96,7 +98,8 @@ router.post('/', (req, res) => {
     });
 });
 
-router.patch('/:id', (req, res) => {
+// Change view update from PATCH to POST
+router.post('/:id/update', (req, res) => {
     UserController.update(req, res, () => {
         res.redirect(`/user/${req.params.id}`);
     });

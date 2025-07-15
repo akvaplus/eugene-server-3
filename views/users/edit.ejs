@@ -7,7 +7,7 @@
         <h6 class="m-0 font-weight-bold text-primary">Edit User</h6>
     </div>
     <div class="card-body">
-        <form action="/user/<%= user._id %>?_method=PATCH" method="POST">
+        <form action="/user/<%= user._id %>/update" method="POST">
             <div class="mb-3">
                 <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" id="username" name="username" value="<%= user.username %>" required>
@@ -22,8 +22,8 @@
                     <input type="text" class="form-control" id="firstName" name="firstName" value="<%= user.firstName %>" required>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label for="lastName" class="form-label">Last Name <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="lastName" name="lastName" value="<%= user.lastName %>" required>
+                    <label for="lastName" class="form-label">Last Name <span class="text-danger"></span></label>
+                    <input type="text" class="form-control" id="lastName" name="lastName" value="<%= user.lastName %>">
                 </div>
             </div>
             <div class="row">
@@ -38,7 +38,7 @@
                 <div class="col-md-4 mb-3">
                     <label for="sex" class="form-label">Sex</label>
                     <select class="form-select" id="sex" name="sex">
-                        <option value="">Select</option>
+                        <option value="Not specified"  <%= !user.sex || user.sex === 'Not specified' ? 'selected' : '' %>>Not specified</option>
                         <option value="M" <%= user.sex === 'M' ? 'selected' : '' %>>Male</option>
                         <option value="F" <%= user.sex === 'F' ? 'selected' : '' %>>Female</option>
                     </select>

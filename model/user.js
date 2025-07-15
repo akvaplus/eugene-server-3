@@ -28,13 +28,12 @@ const userSchema = new mongoose.Schema({
     },
     firstName: {
         type: String,
-        required: true,
+        required: false,
         trim: true
     },
     lastName: {
         type: String,
-        required: true,
-        trim: true
+        required: false
     },
     age: {
         type: Number,
@@ -48,7 +47,8 @@ const userSchema = new mongoose.Schema({
     },
     sex: {
         type: String,
-        enum: ['M', 'F']
+        enum: ['Not specified', 'M', 'F'],
+        default: 'Not specified'
     },
     isEmailVerified: {
         type: Boolean,

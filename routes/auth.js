@@ -94,11 +94,12 @@ router.get('/google',
     })
 );
 
-router.get('/google/callback',
-    passport.authenticate('google', {
-        failureRedirect: '/',
-        successRedirect: '/user'
-    })
+router.get('/google/callback', 
+  passport.authenticate('google', { failureRedirect: '/' }),
+  (req, res) => {
+    req.session.userId = req.user._id;
+    res.redirect(`/user/${req.user._id}`);
+  }
 );
 
 module.exports = router; 

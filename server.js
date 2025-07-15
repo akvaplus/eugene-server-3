@@ -7,17 +7,28 @@ const session = require('express-session');
 const ejsMate = require('ejs-mate');
 const MongoStore = require('connect-mongo');
 const passport = require('passport');
+const methodOverride = require('method-override');
 
 const UserRoute = require('./routes/user')
 const SessionRoute = require('./routes/session')
-
 const AuthRoute = require('./routes/auth');
+const ApiRoute = require('./routes/api');
 const { isAuthenticated } = require('./middleware/auth');
 const UserModel = require('./model/user');
 
 mongoose.Promise = global.Promise;
-mongoose.connect(process.env.MONGODB_URI).then(() => {
-    console.log("Databse Connected Successfully!!");    
+const mongoUri = process.env.MONGODB_URI;
+console.log('Attempting to connect to MongoDB with URI:', mongoUri.replace(/:[^:@]+@/, ':****@'));
+mongoose.connect(mongoUri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
+    retryWrites: true,
+    w: 'majority',
+    appName: 'eugene-server-3'
+}).then(() => {
+    console.log("Database Connected Successfully!!");    
 }).catch(err => {
     console.log('Could not connect to the database', err);
     process.exit();
@@ -29,7 +40,7 @@ app.use(session({
     secret: 'your-secret-key',
     resave: false,
     saveUninitialized: false,
-    store: MongoStore.create({ mongoUrl: 'mongodb://localhost:27017/user-management' }),
+    store: MongoStore.create({ mongoUrl: process.env.MONGODB_URI }),
     cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 hours
 }));
 
@@ -67,6 +78,8 @@ app.use(async (req, res, next) => {
     next();
 });
 
+app.use(methodOverride('_method'));
+
 app.get('/', (req, res) => {
     res.render('home', { error: req.query.error });
 });
@@ -74,6 +87,7 @@ app.get('/', (req, res) => {
 app.use('/user', isAuthenticated, UserRoute)
 app.use('/session', isAuthenticated, SessionRoute)
 app.use('/auth', AuthRoute);
+app.use('/api', ApiRoute);
 app.engine('ejs', ejsMate);
 app.set('view engine', 'ejs');
 app.set('views', './views');

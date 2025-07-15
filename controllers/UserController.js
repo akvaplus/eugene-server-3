@@ -4,7 +4,7 @@ const SessionModel = require('../model/session');
 // Create and Save a new user
 exports.create = async (req, res, callback) => {
     // Validate required fields
-    const requiredFields = ['username', 'email', 'password', 'firstName', 'lastName'];
+    const requiredFields = ['username', 'email', 'password', 'firstName'];
     const missingFields = requiredFields.filter(field => !req.body[field]);
     
     if (missingFields.length > 0) {
@@ -19,7 +19,7 @@ exports.create = async (req, res, callback) => {
             email: req.body.email,
             password: req.body.password,
             firstName: req.body.firstName,
-            lastName: req.body.lastName,
+            lastName: req.body.lastName || '',
             age: req.body.age,
             weight: req.body.weight,
             sex: req.body.sex,
@@ -121,6 +121,7 @@ exports.findOne = async (req, res, callback) => {
 
 // Update a user by ID
 exports.update = async (req, res, callback) => {
+    console.log('req.body:', req.body); // DEBUG: log the entire request body
     if (!req.body || Object.keys(req.body).length === 0) {
         return res.status(400).json({
             message: 'Data to update cannot be empty!'
@@ -128,16 +129,19 @@ exports.update = async (req, res, callback) => {
     }
 
     const id = req.params.id;
-    const updateData = { ...req.body };
-
-    // Prevent updating sensitive fields directly
-    delete updateData.password;
-    delete updateData.emailVerificationToken;
-    delete updateData.resetPasswordToken;
-    delete updateData.isEmailVerified;
-    delete updateData.loginAttempts;
-    delete updateData.lockUntil;
-
+    // Only allow updating specific fields
+    const allowedFields = ['username', 'email', 'firstName', 'lastName', 'age', 'weight', 'sex'];
+    const updateData = {};
+    allowedFields.forEach(field => {
+        if (typeof req.body[field] !== 'undefined') {
+            updateData[field] = req.body[field];
+        }
+    });
+    // Ensure lastName is always set (even if empty)
+    if (typeof updateData.lastName === 'undefined') {
+        updateData.lastName = '';
+    }
+    console.log('data', updateData);
     try {
         const user = await UserModel.findByIdAndUpdate(
             id, 
